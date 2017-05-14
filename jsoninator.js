@@ -4,27 +4,41 @@ const _ = require('underscore'); // the real one! :)
 // const stringify = JSON.stringify;
 // But you don't. So you're going to write it from scratch...
 
+const isObject = function(obj){
+  // This is needed to disambiguate a plain object literal from other types of objects.
+  return Object.prototype.toString.call(obj) === '[object Object]';
+};
 
+const stringifyArray = function(obj){
+  return '[' + _(obj).map(function(item) {
+    return stringify(item);
+  }).join(',') + ']';
+};
+
+const stringifyObject = function(obj){
+  const strings = [];
+
+  _.each(obj, function(item, key) {
+    if(_.isUndefined(item) || _.isFunction(item)) {
+      return;
+    }
+
+    strings.push(stringify(key) + ':' + stringify(item));
+  });
+
+  return '{' + strings.join(',') + '}';
+};
 
 const stringify = function(obj) {
   // your code goes here
-  if(obj === null){
-    return 'null';
-  } else if(typeof obj === 'boolean' || typeof obj === 'number'){
-    return obj.toString();
-  } else if(typeof obj === 'string') {
-    return '"' + obj + '"';
-  } else if(Array.isArray(obj)){
-    let res = obj.map(el => {
-      return stringify(el);
-    });
-    return '[' + res.join(',') + ']';
-  } else if(typeof obj === 'object'){
-    let res = '{';
-    for(let key in obj){
-      res += stringify(key) + ':' + stringify(obj[key]);
-    }
-    return res + '}';
+  if (Array.isArray(obj)) {
+    return stringifyArray(obj);
+  } else if (isObject(obj)) {
+    return stringifyObject(obj);
+  } else if (typeof obj === 'string') {
+    return '"' + obj.replace(/\\/g, '\\\\').replace(/"/g, '\\"') + '"';
+  } else {
+    return obj + '';
   }
 };
 
